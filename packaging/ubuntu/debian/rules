@@ -1,0 +1,50 @@
+#!/usr/bin/make -f
+
+editions := $(patsubst projecteur-%,%,$(shell dh_listpackages))
+version := $(shell dpkg-parsechangelog --show-field Version)
+session-gnome := GNOME
+session-kde := KDE
+launcher-gnome := org.projecteur.Projecteur.Preferences
+launcher-kde := org.projecteur.Projecteur
+
+%:
+	dh $@ --buildsystem=cmake+ninja
+
+override_dh_auto_configure: $(addprefix configure-,$(editions))
+override_dh_auto_build: $(addprefix build-,$(editions))
+override_dh_auto_test: $(addprefix test-,$(editions))
+override_dh_auto_install: $(addprefix install-,$(editions))
+override_dh_auto_clean: $(addprefix clean-,$(editions))
+
+.PHONY: $(foreach step,configure build test install clean,$(addprefix $(step)-,$(editions)))
+
+$(addprefix configure-,$(editions)): configure-%:
+	dh_auto_configure --builddirectory=build-$* -- \
+	    -DPROJECTEUR_WITH_GNOME=$(if $(filter gnome,$*),ON,OFF) \
+	    -DPROJECTEUR_WITH_KDE=$(if $(filter kde,$*),ON,OFF) \
+	    -DPROJECTEUR_PACKAGE_VERSION=$(version) \
+	    -DCMAKE_INSTALL_LIBEXECDIR=libexec \
+	    -DCMAKE_INSTALL_UDEVRULESDIR=/usr/lib/udev/rules.d \
+	    -DCOMPRESS_MAN_PAGE=OFF -DPACKAGE_TARGETS=OFF -DBUILD_TESTING=ON
+
+$(addprefix build-,$(editions)): build-%:
+	dh_auto_build --builddirectory=build-$*
+
+$(addprefix test-,$(editions)): test-%:
+	dh_auto_test --builddirectory=build-$*
+
+$(addprefix install-,$(editions)): install-%:
+	dh_auto_install --builddirectory=build-$* --destdir=$(CURDIR)/debian/projecteur-$*
+	install -d debian/projecteur-$*/etc/xdg/autostart
+	sed 's/^OnlyShowIn=.*/OnlyShowIn=$(session-$*);/' packaging/fedora/projecteur-autostart.desktop \
+	    > debian/projecteur-$*/etc/xdg/autostart/org.projecteur.Projecteur.desktop
+	install -D -m 0644 packaging/fedora/projecteur-uinput.conf \
+	    debian/projecteur-$*/usr/lib/modules-load.d/projecteur-uinput.conf
+	desktop-file-validate debian/projecteur-$*/usr/share/applications/$(launcher-$*).desktop
+	desktop-file-validate debian/projecteur-$*/etc/xdg/autostart/org.projecteur.Projecteur.desktop
+
+$(addprefix clean-,$(editions)): clean-%:
+	dh_auto_clean --builddirectory=build-$*
+
+override_dh_installdocs:
+	dh_installdocs README.md doc/LINUX-PACKAGES.md

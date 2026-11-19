@@ -1,14 +1,17 @@
 # Contributing to Projecteur
 
-The package target is Fedora 45 on Wayland with GNOME Shell 51 or KDE Plasma 6.
+The packaged targets are Fedora 45, Ubuntu/Kubuntu 26.10 and openSUSE
+Tumbleweed on Wayland with GNOME Shell 51 or KDE Plasma.
 Please keep changes focused and describe their effect on a presentation or
 presenter device. For larger work, discuss the approach in an
 [issue](https://github.com/ALsbraun/Projecteur/issues) first.
 
 ## Build requirements
 
-The authoritative dependency list is
-[`packaging/fedora/projecteur-gnome.spec`](packaging/fedora/projecteur-gnome.spec).
+Build dependencies are listed in the package definitions for
+[Fedora](packaging/fedora/projecteur-gnome.spec),
+[Ubuntu](packaging/ubuntu/debian/control) and
+[openSUSE](packaging/opensuse/projecteur.spec).
 Both editions use C++17 and CMake. GNOME builds with GLib, GIO and
 nlohmann/json. Its preferences use GJS, GTK 4.10 or later and libadwaita 1.6
 or later at runtime. The Plasma edition builds with Qt 6.10 or later, KDE
@@ -26,7 +29,8 @@ This creates binary and source RPMs under `dist/`; `build-rpm/` holds temporary
 build files. Subsequent runs can omit `--install-deps`. Set
 `PROJECTEUR_BUILD_JOBS=2` on machines with less memory. Use `--desktop gnome` or
 `--desktop kde` to select one edition. Use the RPM on the target desktop for
-physical-device tests.
+physical-device tests. See the [Ubuntu and openSUSE guide](doc/LINUX-PACKAGES.md)
+for their build commands.
 
 For faster implementation iterations after installing dependencies:
 
@@ -43,8 +47,8 @@ ctest --test-dir build/gnome --output-on-failure
 
 The GNOME extension and udev rules must be installed for the complete desktop
 workflow. Do not run the device application as Root. For a Plasma-only build, configure with
-`-DPROJECTEUR_WITH_KDE=ON -DPROJECTEUR_WITH_GNOME=OFF`. Both RPM builds run the
-common device tests. The compositor smoke test covers GNOME 51.
+`-DPROJECTEUR_WITH_KDE=ON -DPROJECTEUR_WITH_GNOME=OFF`. All desktop packages run the common device tests. Fedora CI also runs the
+GNOME 51 compositor smoke test.
 
 ## Validation
 

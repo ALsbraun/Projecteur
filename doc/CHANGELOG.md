@@ -1,5 +1,14 @@
 # Projecteur Changelog
 
+## v1.1.0 — Ubuntu and openSUSE packages
+
+- Build separate GNOME and KDE Plasma DEBs for Ubuntu and Kubuntu 26.10.
+- Build separate GNOME and KDE Plasma RPMs for openSUSE Tumbleweed.
+- Keep the GNOME editions Qt-free and preserve the shared presenter
+  configuration across supported desktops.
+- Include the new packages in GitHub Releases after their native builds
+  and package dependency checks pass.
+
 ## v1.0.0 — first release of the Projecteur repository
 
 - Ship separate Fedora 45 RPMs for GNOME 51 and KDE Plasma on Wayland.

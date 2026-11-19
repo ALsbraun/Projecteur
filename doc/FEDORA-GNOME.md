@@ -14,7 +14,7 @@ The RPM contains the application, extension, device access rules and a GNOME
 autostart entry. Run the installation on the Fedora desktop outside Toolbox.
 
 ```sh
-sudo dnf install ./dist/projecteur-gnome-1.0.0-1.fc45.x86_64.rpm
+sudo dnf install ./dist/projecteur-gnome-1.1.0-1.fc45.x86_64.rpm
 ```
 
 **Log out and back in** so GNOME discovers the system-installed extension.

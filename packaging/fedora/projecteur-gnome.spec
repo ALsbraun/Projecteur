@@ -13,7 +13,7 @@
 %global projecteur_launcher org.projecteur.Projecteur
 %endif
 %global extension_uuid projecteur@projecteur.github.io
-%{!?projecteur_version:%global projecteur_version 1.0.0}
+%{!?projecteur_version:%global projecteur_version 1.1.0}
 %{!?projecteur_release:%global projecteur_release 1}
 
 Name:           projecteur-%{projecteur_desktop}
@@ -165,6 +165,11 @@ desktop-file-validate %{buildroot}%{_sysconfdir}/xdg/autostart/org.projecteur.Pr
 %endif
 
 %changelog
+* Thu Nov 19 2026 Projecteur contributors - 1.1.0-1
+- Add native DEBs for Ubuntu and Kubuntu 26.10.
+- Add distribution-specific RPMs for openSUSE Tumbleweed.
+- Test and publish GNOME and Plasma packages for all supported distributions.
+
 * Thu Nov 19 2026 Projecteur contributors - 1.0.0-1
 - Initial release from the Projecteur repository for Fedora 45.
 - Ship separate RPMs for GNOME 51 and KDE Plasma on Wayland.

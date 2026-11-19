@@ -1,7 +1,6 @@
 # Projecteur
 
-**Logitech Spotlight on Fedora 45 and Wayland, with editions for GNOME 51 and
-KDE Plasma.**
+**Logitech Spotlight on Wayland, with editions for GNOME 51 and KDE Plasma.**
 
 [![Fedora 45 RPM](https://github.com/ALsbraun/Projecteur/actions/workflows/fedora-rpm.yml/badge.svg?branch=main)](https://github.com/ALsbraun/Projecteur/actions/workflows/fedora-rpm.yml)
 [![MIT license](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE.md)
@@ -25,13 +24,21 @@ and a Plasma panel widget.
 - Automatic cleanup on extension disable, application disconnect and expired
   state updates.
 
-The GNOME device service uses GLib and GIO. The GNOME RPM has no Qt or KDE
+The GNOME device service uses GLib and GIO. The GNOME packages have no Qt or KDE
 Frameworks dependencies. Both editions read and write the existing
 `projecteurrc` file, so presets and button mappings carry over between desktops.
 On GNOME, desktop notifications go directly through the session notification
 service.
 
-## Install the RPM
+## Install Projecteur
+
+| Distribution | Packages |
+| --- | --- |
+| Fedora 45 | [Fedora RPMs](#install-on-fedora) |
+| Ubuntu and Kubuntu 26.10 | [Ubuntu DEBs](doc/LINUX-PACKAGES.md) |
+| openSUSE Tumbleweed | [Tumbleweed RPMs](doc/LINUX-PACKAGES.md) |
+
+## Install on Fedora
 
 Choose the binary RPM for your desktop from
 [Releases](https://github.com/ALsbraun/Projecteur/releases). The packages
@@ -52,7 +59,7 @@ the downloaded RPM for your desktop to switch to this release.
 For the current local release build:
 
 ```sh
-sudo dnf install ./projecteur-gnome-1.0.0-1.fc45.x86_64.rpm
+sudo dnf install ./projecteur-gnome-1.1.0-1.fc45.x86_64.rpm
 ```
 
 Log out and back in, then enable the extension:
@@ -76,7 +83,7 @@ for detailed setup, diagnosis and removal.
 ### KDE Plasma
 
 ```sh
-sudo dnf install ./projecteur-kde-1.0.0-1.fc45.x86_64.rpm
+sudo dnf install ./projecteur-kde-1.1.0-1.fc45.x86_64.rpm
 ```
 
 On a Plasma Wayland session, sign out and back in for autostart or open
@@ -84,7 +91,7 @@ On a Plasma Wayland session, sign out and back in for autostart or open
 **Add Widgets** to get panel controls. Reconnect the presenter after
 installation so the device access rules take effect.
 
-## Build the RPMs
+## Build Fedora RPMs
 
 ```sh
 git clone https://github.com/ALsbraun/Projecteur.git
@@ -98,12 +105,15 @@ build dependencies. By default the script builds both editions. Use
 and checksums go to `dist/`. Install the chosen RPM on the desktop for hardware
 testing.
 
+See the [Ubuntu and openSUSE packaging guide](doc/LINUX-PACKAGES.md) for
+their build commands and install instructions.
+
 ## Verification and current limits
 
-CI builds both editions with Fedora 45 packages and checks input/HID++ parsing.
-The GNOME tests also check monitor geometry, preferences and overlay D-Bus
-calls, and a real headless GNOME 51 compositor. The compositor test renders all three effects and checks
-cleanup. It saves screenshots and logs as build artifacts.
+CI builds both editions on Fedora 45, Ubuntu 26.10 and openSUSE Tumbleweed.
+The package builds test input and HID++ handling. GNOME builds also test
+monitor geometry, preferences and D-Bus calls. A real headless GNOME 51
+compositor on Fedora renders all three effects and checks cleanup.
 
 The user's device test of 1.0.1 confirmed normal operation except for the upper
 button's double-click mode switch. The device reports were captured; 1.0.2
@@ -120,11 +130,10 @@ renderer. Full parity with all Logitech Windows software features is not claimed
 
 ## Automatic maintenance
 
-Every pull request and main-branch update runs the Fedora RPM and GNOME checks.
-Successful main updates and the weekly rebuild publish uniquely versioned
-pre-release RPMs. A matching `vX.Y.Z` tag publishes a stable release after the
-same checks pass. The weekly build refreshes Fedora dependencies even when the
-source has not changed.
+Pull requests and main-branch updates build and test packages for all three
+distributions. Successful main updates and weekly builds publish versioned
+prerelease packages. A matching `vX.Y.Z` tag publishes a stable release once the
+same checks pass.
 
 Dependabot owns GitHub Actions updates; Renovate owns the pinned Fedora 45
 container image. Eligible action patch/digest and Fedora image digest updates

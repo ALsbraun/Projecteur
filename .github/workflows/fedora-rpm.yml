@@ -64,7 +64,8 @@ jobs:
           done
       - name: Check repository scripts
         run: |
-          shellcheck packaging/fedora/build-rpm.sh .github/scripts/*.sh
+          shellcheck -x packaging/source-archive.sh packaging/{fedora,rpm,opensuse}/build-rpm.sh \
+            packaging/ubuntu/build-deb.sh .github/scripts/*.sh
           python3 -m json.tool renovate.json >/dev/null
           python3 .github/tests/test-dependabot-policy.py
           git diff --check
@@ -122,9 +123,82 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  additional-packages:
+    name: ${{ matrix.name }} packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 26.10
+            target: ubuntu
+            image: docker.io/library/ubuntu:26.10
+            output: ubuntu26.10
+          - name: openSUSE Tumbleweed
+            target: opensuse
+            image: registry.opensuse.org/opensuse/tumbleweed:latest
+            output: opensuse
+    container: ${{ matrix.image }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install checkout tools
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          if [[ "$TARGET" == ubuntu ]]; then
+            apt-get update
+            apt-get install -y --no-install-recommends ca-certificates git
+          else
+            zypper --non-interactive refresh
+            zypper --non-interactive install --no-recommends ca-certificates git
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Compute package identity
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          .github/scripts/build-metadata.sh
+      - name: Build and test both desktop editions
+        env:
+          TARGET: ${{ matrix.target }}
+          DEBIAN_FRONTEND: noninteractive
+          PROJECTEUR_BUILD_JOBS: 2
+        run: |
+          if [[ "$TARGET" == ubuntu ]]; then
+            export PROJECTEUR_DEB_REVISION="$PROJECTEUR_RPM_RELEASE"
+            ./packaging/ubuntu/build-deb.sh --desktop gnome --install-deps
+            ./packaging/ubuntu/build-deb.sh --desktop kde --install-deps
+            dependencies=$(dpkg-deb -f dist/ubuntu26.10/projecteur-gnome_*.deb Depends)
+            for package in dist/ubuntu26.10/projecteur-{gnome,kde}_*.deb; do
+              apt-get --simulate install --no-install-recommends "./$package"
+            done
+          else
+            ./packaging/opensuse/build-rpm.sh --desktop gnome --install-deps
+            ./packaging/opensuse/build-rpm.sh --desktop kde --install-deps
+            dependencies=$(rpm -qp --requires dist/opensuse/projecteur-gnome-[0-9]*.x86_64.rpm)
+            for package in dist/opensuse/projecteur-{gnome,kde}-[0-9]*.x86_64.rpm; do
+              zypper --non-interactive install --dry-run --no-recommends "./$package"
+            done
+          fi
+          if grep -Ei 'qt[0-9]|libKF[0-9]|plasma|kpipewire|layer-shell-qt' <<< "$dependencies"; then
+            echo 'Unexpected Qt or KDE dependency in the GNOME package.' >&2
+            exit 1
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.output }}-packages
+          path: dist/${{ matrix.output }}/
+          if-no-files-found: error
+          retention-days: 14
+
   release:
-    name: Publish tested RPMs
-    needs: rpm
+    name: Publish tested packages
+    needs: [rpm, additional-packages]
     if: >-
       github.repository == 'ALsbraun/Projecteur' &&
       ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) ||
@@ -140,6 +214,14 @@ jobs:
         with:
           name: fedora45-rpms
           path: dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ubuntu26.10-packages
+          path: dist/ubuntu26.10
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: opensuse-packages
+          path: dist/opensuse
       - name: Publish immutable versioned assets
         env:
           GH_TOKEN: ${{ github.token }}
@@ -152,6 +234,10 @@ jobs:
         run: |
           set -euo pipefail
           (cd dist && sha256sum -c SHA256SUMS)
+          (cd dist/ubuntu26.10 && sha256sum -c SHA256SUMS)
+          (cd dist/opensuse && sha256sum -c SHA256SUMS)
+          mv -- dist/ubuntu26.10/*.deb dist/opensuse/*.rpm dist/
+          (cd dist && sha256sum -- *.rpm *.deb BUILD-DEPENDENCIES.txt > SHA256SUMS)
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             printf 'Release %s already exists; refusing to overwrite its assets.\n' "$RELEASE_TAG"
             exit 0
@@ -160,20 +246,23 @@ jobs:
           Fedora 45 / Wayland packages: ${PACKAGE_VERSION}-${PACKAGE_RELEASE}.fc45
           Source commit: ${SOURCE_SHA}
 
-          Includes GNOME and KDE Plasma RPMs, their source and debug packages, and SHA256SUMS.
-          Device/input, geometry, D-Bus and real headless GNOME compositor checks passed.
+          Includes separate GNOME and KDE Plasma packages for Fedora 45, openSUSE
+          Tumbleweed and Ubuntu/Kubuntu 26.10, plus SHA256SUMS.
+          Device/input, geometry and D-Bus checks passed. CI also ran a real
+          headless GNOME compositor on Fedora.
           Physical presenter behavior and the user's monitor setup still require hardware testing.
 
-          Install either projecteur-gnome or projecteur-kde with dnf.
+          Choose either projecteur-gnome or projecteur-kde for your distribution.
+          Use dnf on Fedora, apt on Ubuntu or Kubuntu, or zypper on openSUSE.
           On GNOME, log out and back in, then enable projecteur@projecteur.github.io.
           On KDE Plasma, open Projecteur from the application menu or add its panel widget.
           Reconnect the presenter after installation.
-          Local build packages are unsigned. See doc/FEDORA-GNOME.md in the repository.
+          See the installation guides in doc/ for platform-specific steps.
           EOF
           flags=(--latest=false --prerelease)
           if [[ "$PRERELEASE" == false ]]; then
             flags=(--latest --verify-tag)
           fi
-          gh release create "$RELEASE_TAG" dist/*.rpm dist/SHA256SUMS dist/BUILD-DEPENDENCIES.txt \
+          gh release create "$RELEASE_TAG" dist/*.rpm dist/*.deb dist/SHA256SUMS dist/BUILD-DEPENDENCIES.txt \
             --target "$SOURCE_SHA" --title "Projecteur $RELEASE_TAG" \
             --notes-file release-notes.txt "${flags[@]}"

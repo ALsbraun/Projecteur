@@ -1,0 +1,85 @@
+Source: projecteur
+Section: utils
+Priority: optional
+Maintainer: Projecteur contributors <stefan.braun@ergon.ch>
+Homepage: https://github.com/ALsbraun/Projecteur
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake (>= 3.20),
+ ninja-build,
+ gettext,
+ pkgconf,
+ desktop-file-utils,
+ libglib2.0-dev <!pkg.projecteur.kde-only>,
+ nlohmann-json3-dev (>= 3.10) <!pkg.projecteur.kde-only>,
+ dbus-daemon <!pkg.projecteur.kde-only>,
+ gjs <!pkg.projecteur.kde-only>,
+ locales-all <!pkg.projecteur.kde-only>,
+ nodejs <!pkg.projecteur.kde-only>,
+ extra-cmake-modules (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ qt6-base-dev (>= 6.10~) <!pkg.projecteur.gnome-only>,
+ qt6-declarative-dev (>= 6.10~) <!pkg.projecteur.gnome-only>,
+ qt6-shadertools-dev (>= 6.10~) <!pkg.projecteur.gnome-only>,
+ qt6-wayland-dev (>= 6.10~) <!pkg.projecteur.gnome-only>,
+ libwayland-dev <!pkg.projecteur.gnome-only>,
+ libkf6config-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6configwidgets-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6coreaddons-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6dbusaddons-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6globalaccel-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6i18n-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6notifications-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6package-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6widgetsaddons-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6windowsystem-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkf6xmlgui-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkirigami-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libkpipewire-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ liblayershellqtinterface-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+ libplasma-dev (>= 6.7~) <!pkg.projecteur.gnome-only>,
+
+Package: projecteur-gnome
+Architecture: any
+Build-Profiles: <!pkg.projecteur.kde-only>
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ gir1.2-adw-1 (>= 1.6),
+ gir1.2-gtk-4.0 (>= 4.10),
+ gjs,
+ gnome-shell (>= 51),
+ gnome-shell (<< 52~),
+ hicolor-icon-theme,
+ kmod,
+ udev,
+Provides: projecteur (= ${binary:Version})
+Conflicts: projecteur, projecteur-kde
+Description: Logitech Spotlight presenter controls for GNOME Wayland
+ Projecteur supports Logitech Spotlight presentation remotes over USB and
+ Bluetooth. This edition includes GTK 4 preferences and a GNOME Shell
+ extension for a spotlight, pointer and magnifier on Wayland.
+
+Package: projecteur-kde
+Architecture: any
+Build-Profiles: <!pkg.projecteur.gnome-only>
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ hicolor-icon-theme,
+ kmod,
+ layer-shell-qt (>= 6.7~),
+ plasma-workspace (>= 4:6.7~),
+ qml6-module-org-kde-kirigami,
+ qml6-module-org-kde-pipewire,
+ qml6-module-qtquick,
+ qml6-module-qtquick-effects,
+ qml6-module-qtquick-layouts,
+ qml6-module-qtquick-window,
+ qt6-wayland (>= 6.10~),
+ udev,
+Provides: projecteur (= ${binary:Version})
+Conflicts: projecteur, projecteur-gnome
+Description: Logitech Spotlight presenter controls for KDE Plasma Wayland
+ Projecteur supports Logitech Spotlight presentation remotes over USB and
+ Bluetooth. This edition includes Qt preferences, a KWin Wayland overlay and
+ a Plasma panel widget.

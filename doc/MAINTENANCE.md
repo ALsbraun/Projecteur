@@ -57,9 +57,11 @@ changing the unsigned local-test workflow.
 Build jobs have only read access to repository contents, including on fork PRs.
 The separate publication job has `contents: write`, downloads only the successful
 artifact from its own run, checks checksums and executes no project source or
-binary. Releases contain separate GNOME and KDE Plasma binary RPMs, their source and
-debug RPMs, checksums and an inventory of the Fedora packages used for the
-build. Existing release assets
+binary. Releases contain separate GNOME and KDE Plasma packages for Fedora 45,
+Ubuntu/Kubuntu 26.10, and openSUSE Tumbleweed. The release job waits for the
+native packages and dependency checks on all three distributions. It publishes
+the binary packages, source and debug RPMs, a shared checksum file, and the
+Fedora build dependency inventory. Existing release assets
 are never replaced. Workflow reruns of an existing stable release leave its
 assets intact.
 
@@ -78,10 +80,10 @@ weekly build stops appearing. No external scheduler is configured here.
 
 ## RPM ordering and release procedure
 
-`VERSION` contains the application version, currently `1.0.0`. A local build and
+`VERSION` contains the application version, currently `1.1.0`. A local build and
 a stable tag build use RPM release `1`. The binary packages are
-`projecteur-gnome-1.0.0-1.fc45.x86_64.rpm` and
-`projecteur-kde-1.0.0-1.fc45.x86_64.rpm`.
+`projecteur-gnome-1.1.0-1.fc45.x86_64.rpm` and
+`projecteur-kde-1.1.0-1.fc45.x86_64.rpm`.
 
 Development builds use release
 `0.UTC_TIMESTAMP.RUN_ID.ATTEMPT.gitCOMMIT`, and a matching unique
@@ -95,9 +97,9 @@ a matching `vX.Y.Z` tag on that reviewed commit. The tag workflow builds and
 publishes the package automatically after all checks pass.
 
 **Immediately after a stable release, advance `VERSION` and the spec fallback to
-the next development patch version on `main`.** For example, after `v1.0.0`,
-develop against `1.0.1`. Otherwise weekly `1.0.0-0.…` snapshots intentionally
-sort below installed `1.0.0-1`; they are not automatic upgrades of that stable
+the next development patch version on `main`.** For example, after `v1.1.0`,
+develop against `1.1.1`. Otherwise weekly `1.1.0-0.…` snapshots intentionally
+sort below installed `1.1.0-1`; they are not automatic upgrades of that stable
 RPM. Do not force a downgrade merely to follow a nightly build.
 
 The weekly workflow performs `dnf --refresh upgrade` and resolves the spec's
