@@ -153,7 +153,8 @@ jobs:
             apt-get install -y --no-install-recommends ca-certificates git
           else
             zypper --non-interactive refresh
-            zypper --non-interactive install --no-recommends ca-certificates git
+            # Select GNU awk before Git can pull in the conflicting BusyBox provider.
+            zypper --non-interactive install --no-recommends ca-certificates gawk git
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
