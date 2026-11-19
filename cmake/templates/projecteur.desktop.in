@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Exec=@PROJECTEUR_DESKTOP_EXEC@
+Name=Projecteur
+GenericName=Wayland spotlight for Logitech presenter devices
+GenericName[de]=Wayland-Spotlight für Logitech-Presenter
+Icon=@PROJECTEUR_DESKTOP_ICON@
+Terminal=false
+StartupNotify=@PROJECTEUR_DESKTOP_STARTUP_NOTIFY@
+DBusActivatable=@PROJECTEUR_DESKTOP_ACTIVATABLE@
+Categories=Office;Presentation;
+@PROJECTEUR_DESKTOP_KDE_INTERFACES@

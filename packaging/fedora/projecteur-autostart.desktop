@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Projecteur
+Comment=Connect Logitech Spotlight presentation remotes
+Comment[de]=Logitech-Spotlight-Presenter verbinden
+Exec=projecteur --background
+TryExec=projecteur
+Icon=projecteur
+Terminal=false
+OnlyShowIn=GNOME;
+X-GNOME-Autostart-enabled=true

@@ -1,0 +1,144 @@
+name: Dependabot patch automerge
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+# This workflow never checks out or executes code from the pull request.
+permissions:
+  contents: read
+
+jobs:
+  enable:
+    name: Validate dependency update and queue merge
+    if: >-
+      github.repository == 'ALsbraun/Projecteur' &&
+      github.actor == 'dependabot[bot]' &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.base.ref == 'main' &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Check verified bot commit and exact action-only patch
+        id: policy
+        run: |
+          python3 - <<'PY'
+          import collections
+          import json
+          import os
+          import re
+          import subprocess
+
+          repo = os.environ['GH_REPO']
+          number = os.environ['PR_NUMBER']
+          head = os.environ['EXPECTED_HEAD']
+          def api(path):
+              return json.loads(subprocess.check_output(['gh', 'api', path]))
+          def require(condition, reason):
+              if not condition:
+                  print('Manual review required: ' + reason)
+                  raise SystemExit(0)
+          pr = api(f'repos/{repo}/pulls/{number}')
+          require(pr['state'] == 'open' and pr['head']['sha'] == head, 'PR head changed')
+          require(pr['user']['login'] == 'dependabot[bot]' and
+                  pr['head']['repo']['full_name'] == repo and pr['base']['ref'] == 'main',
+                  'unexpected PR origin')
+          require(pr['head']['ref'].startswith('dependabot/github_actions/'), 'unexpected bot branch')
+          commit = api(f'repos/{repo}/commits/{head}')
+          require((commit.get('author') or {}).get('login') == 'dependabot[bot]' and
+                  commit['commit']['verification']['verified'], 'unverified bot commit')
+          files = api(f'repos/{repo}/pulls/{number}/files?per_page=100')
+          require(0 < len(files) == pr['changed_files'] <= 20, 'unexpected file count')
+          pattern = re.compile(r'^\s+(?:-\s+)?uses: (actions/(?:checkout|upload-artifact|download-artifact))@([0-9a-f]{40}) # v(\d+)\.(\d+)\.(\d+)$')
+          checked_tags = {}
+          for file in files:
+              require(file['status'] == 'modified' and
+                      re.fullmatch(r'\.github/workflows/[^/]+\.ya?ml', file['filename']),
+                      'change outside workflow action references')
+              removed, added = collections.defaultdict(list), collections.defaultdict(list)
+              patch = file.get('patch', '')
+              changed = 0
+              for line in patch.splitlines():
+                  if line[:1] not in ('+', '-'):
+                      continue
+                  match = pattern.fullmatch(line[1:])
+                  require(match is not None, 'change is not a pinned action reference')
+                  action, sha, major, minor, fix = match.groups()
+                  (added if line[0] == '+' else removed)[action].append((sha, (int(major), int(minor), int(fix))))
+                  changed += 1
+              require(changed > 0 and changed == file['additions'] + file['deletions'], 'incomplete diff')
+              require(removed.keys() == added.keys(), 'added or removed action')
+              for action in removed:
+                  require(len(removed[action]) == len(added[action]), 'changed action count')
+                  for old, new in zip(removed[action], added[action]):
+                      require(new[1][:2] == old[1][:2] and new[1][2] >= old[1][2], 'major/minor update or downgrade')
+                      tag = 'v' + '.'.join(map(str, new[1]))
+                      key = (action, tag)
+                      if key not in checked_tags:
+                          reference = api(f'repos/{action}/git/ref/tags/{tag}')['object']
+                          for _ in range(3):
+                              if reference['type'] != 'tag':
+                                  break
+                              reference = api(f'repos/{action}/git/tags/{reference["sha"]}')['object']
+                          require(reference['type'] == 'commit', 'unresolved release tag')
+                          checked_tags[key] = reference['sha']
+                      require(new[0] == checked_tags[key], 'new SHA does not match the official action release')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('eligible=true\n')
+          print('Verified patch/digest-only update of approved official actions.')
+          PY
+      - name: Require protected main and native automerge
+        if: steps.policy.outputs.eligible == 'true'
+        run: |
+          # GraphQL variables must reach gh unchanged.
+          # shellcheck disable=SC2016
+          gh api graphql -f query='query($owner:String!,$name:String!){repository(owner:$owner,name:$name){autoMergeAllowed ref(qualifiedName:"refs/heads/main"){branchProtectionRule{requiresStatusChecks requiresStrictStatusChecks requiredStatusCheckContexts}}}}' \
+            -f owner="${GH_REPO%/*}" -f name="${GH_REPO#*/}" > protection.json
+          python3 - <<'PY'
+          import json
+          data = json.load(open('protection.json'))['data']['repository']
+          rule = data['ref']['branchProtectionRule']
+          assert data['autoMergeAllowed'], 'Enable repository auto-merge first (see doc/MAINTENANCE.md)'
+          assert rule and rule['requiresStatusChecks'] and rule['requiresStrictStatusChecks'], 'Protect main with strict required checks first'
+          assert 'Fedora 45 RPM' in rule['requiredStatusCheckContexts'], 'Fedora 45 RPM must be a required check'
+          PY
+          gh pr merge "$PR_NUMBER" --repo "$GH_REPO" --auto --squash \
+            --match-head-commit "$EXPECTED_HEAD"
+      - name: Rebuild after a token-initiated merge
+        if: steps.policy.outputs.eligible == 'true'
+        run: |
+          # GITHUB_TOKEN merges may suppress push workflows. workflow_dispatch
+          # is an explicit exception; dispatch only once a verified PR is merged.
+          for _attempt in $(seq 1 100); do
+            gh pr view "$PR_NUMBER" --repo "$GH_REPO" \
+              --json state,headRefOid,mergeCommit > merge-state.json
+            state=$(jq -r .state merge-state.json)
+            if [[ "$state" == MERGED ]]; then
+              merge_sha=$(jq -r .mergeCommit.oid merge-state.json)
+              sleep 10
+              push_runs=$(gh api "repos/$GH_REPO/actions/workflows/fedora-rpm.yml/runs?event=push&head_sha=$merge_sha" --jq .total_count)
+              if [[ "$push_runs" == 0 ]]; then
+                gh workflow run fedora-rpm.yml --repo "$GH_REPO" --ref main -f publish=true
+              fi
+              exit 0
+            fi
+            if [[ "$state" != OPEN ]]; then exit 0; fi
+            if [[ $(jq -r .headRefOid merge-state.json) != "$EXPECTED_HEAD" ]]; then
+              printf 'PR head changed; the new revision must pass its own policy checks.\n'
+              exit 0
+            fi
+            sleep 20
+          done
+          printf 'Native automerge still pending (for example a required review). Weekly rebuild remains scheduled.\n'

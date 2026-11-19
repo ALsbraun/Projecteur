@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>org.projecteur.Projecteur</id>
+    <metadata_license>FSFAP</metadata_license>
+    <project_license>MIT</project_license>
+    <name>Projecteur</name>
+    <summary>Virtual pointer for the Logitech Spotlight device</summary>
+    <developer id="io.github.ALsbraun">
+        <name>ALsbraun and Projecteur contributors</name>
+    </developer>
+    <launchable type="desktop-id">@PROJECTEUR_DESKTOP_ID@.desktop</launchable>
+    <content_rating type="oars-1.1" />
+    <url type="homepage">@HOMEPAGE@</url>
+    <url type="bugtracker">https://github.com/ALsbraun/Projecteur/issues</url>
+    <description>
+        <p>
+            Projecteur is a virtual laser pointer for use with inertial
+            pointers such as the Logitech Spotlight. Projecteur can show
+            a colored dot, a highlighted circle or a zoom effect to act
+            as a pointer. The location of the pointer moves in response
+            to moving the handheld pointer device. The effect is much
+            like that of a traditional laser pointer. On Fedora GNOME,
+            the bundled Shell extension draws the effects on the Wayland desktop.
+        </p>
+    </description>
+    <provides>
+        <modalias>usb:v046DpC53Ed*</modalias>
+        <modalias>usb:v046DpC548d*</modalias>
+    </provides>
+    <screenshots>
+        <screenshot type="default">
+            <caption>Original Projecteur spotlight appearance (upstream Plasma edition)</caption>
+            <image type="source" width="867" height="775">https://raw.githubusercontent.com/ALsbraun/Projecteur/main/doc/screenshot-spot.png</image>
+        </screenshot>
+    </screenshots>
+    <categories>
+        <category>Office</category>
+        <category>Presentation</category>
+    </categories>
+</component>

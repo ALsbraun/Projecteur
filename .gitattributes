@@ -1,0 +1,2 @@
+# Substitute the actual fork revision when GitHub/git archive exports sources.
+cmake/modules/ArchiveExportInfo.cmake export-subst

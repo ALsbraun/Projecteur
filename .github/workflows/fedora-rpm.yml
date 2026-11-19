@@ -1,0 +1,179 @@
+name: Fedora 45 RPM
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ['v*']
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a snapshot after all checks pass (main only)
+        type: boolean
+        default: false
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fedora45-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  rpm:
+    name: Fedora 45 RPM
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    container:
+      image: registry.fedoraproject.org/fedora:45@sha256:8430348a73c5a0e607b5de2cf9dd4741d9aa0891bbce3108588298102015f8c6
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      version: ${{ steps.version.outputs.version }}
+      package_release: ${{ steps.version.outputs.package_release }}
+    steps:
+      - name: Refresh Fedora 45 and install build tools
+        run: |
+          dnf -y --refresh upgrade
+          dnf -y install dnf5-plugins git rpm-build gcc-c++ cmake ninja-build python3 python3-pyyaml ShellCheck \
+            shadow-utils util-linux tar gzip \
+            gnome-shell mesa-dri-drivers mesa-libEGL dbus-daemon dbus-tools gsettings-desktop-schemas
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Trust the workspace for container Git commands
+        run: |
+          # Checkout's temporary Git config does not cover subsequent run steps.
+          # Trust only this checkout, including after the builder ownership change.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Compute package identity
+        id: version
+        run: .github/scripts/build-metadata.sh
+      - name: Install declared RPM build dependencies
+        run: |
+          for desktop in gnome kde; do
+            dnf -y builddep --define "projecteur_desktop $desktop" packaging/fedora/projecteur-gnome.spec
+          done
+      - name: Check repository scripts
+        run: |
+          shellcheck packaging/fedora/build-rpm.sh .github/scripts/*.sh
+          python3 -m json.tool renovate.json >/dev/null
+          python3 .github/tests/test-dependabot-policy.py
+          git diff --check
+      - name: Build both Fedora RPMs and run tests
+        run: |
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- env PROJECTEUR_RPM_RELEASE="$PROJECTEUR_RPM_RELEASE" \
+            PROJECTEUR_BUILD_JOBS=2 SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" \
+            ./packaging/fedora/build-rpm.sh --desktop both
+          rpm --checksig --nosignature dist/*.rpm
+          for package in dist/projecteur-gnome-[0-9]*.x86_64.rpm; do
+            dependencies=$(rpm -qp --requires "$package")
+            if grep -Ei 'qt[0-9]|libKF[0-9]|(^|[[:space:]])(plasma|kpipewire|layer-shell-qt)' <<< "$dependencies"; then
+              echo "Unexpected Qt or KDE dependency in $package" >&2
+              exit 1
+            fi
+          done
+          rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n' | sort > dist/BUILD-DEPENDENCIES.txt
+          (cd dist && sha256sum -- *.rpm BUILD-DEPENDENCIES.txt > SHA256SUMS)
+          (cd dist && sha256sum -c SHA256SUMS)
+      - name: Test the real GNOME 51 compositor
+        run: |
+          # The test owns both buses; it must not activate container system services.
+          runuser -u builder -- ./gnome/tests/shell-smoke.sh | tee build-rpm/gnome-smoke.log
+      - name: Collect compositor evidence
+        if: always()
+        run: |
+          mkdir -p build-rpm/gnome-evidence
+          for directory in /tmp/projecteur-shell-test.*; do
+            if [[ -d "$directory" ]]; then
+              destination="build-rpm/gnome-evidence/${directory##*/}"
+              mkdir -p "$destination"
+              for file in "$directory"/*.log "$directory"/*.png "$directory"/ping.txt; do
+                if [[ -f "$file" && ! -L "$file" ]]; then cp -- "$file" "$destination/"; fi
+              done
+            fi
+          done
+      - name: Save successful RPMs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fedora45-rpms
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Save test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fedora45-test-evidence
+          path: |
+            build-rpm/gnome-smoke.log
+            build-rpm/gnome-evidence/
+            build-rpm/BUILD/**/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  release:
+    name: Publish tested RPMs
+    needs: rpm
+    if: >-
+      github.repository == 'ALsbraun/Projecteur' &&
+      ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) ||
+       github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      # No source checkout and no execution of build artifacts in this write job.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: fedora45-rpms
+          path: dist
+      - name: Publish immutable versioned assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.rpm.outputs.tag }}
+          PRERELEASE: ${{ needs.rpm.outputs.prerelease }}
+          SOURCE_SHA: ${{ github.sha }}
+          PACKAGE_VERSION: ${{ needs.rpm.outputs.version }}
+          PACKAGE_RELEASE: ${{ needs.rpm.outputs.package_release }}
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum -c SHA256SUMS)
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            printf 'Release %s already exists; refusing to overwrite its assets.\n' "$RELEASE_TAG"
+            exit 0
+          fi
+          cat > release-notes.txt <<EOF
+          Fedora 45 / Wayland packages: ${PACKAGE_VERSION}-${PACKAGE_RELEASE}.fc45
+          Source commit: ${SOURCE_SHA}
+
+          Includes GNOME and KDE Plasma RPMs, their source and debug packages, and SHA256SUMS.
+          Device/input, geometry, D-Bus and real headless GNOME compositor checks passed.
+          Physical presenter behavior and the user's monitor setup still require hardware testing.
+
+          Install either projecteur-gnome or projecteur-kde with dnf.
+          On GNOME, log out and back in, then enable projecteur@projecteur.github.io.
+          On KDE Plasma, open Projecteur from the application menu or add its panel widget.
+          Reconnect the presenter after installation.
+          Local build packages are unsigned. See doc/FEDORA-GNOME.md in the repository.
+          EOF
+          flags=(--latest=false --prerelease)
+          if [[ "$PRERELEASE" == false ]]; then
+            flags=(--latest --verify-tag)
+          fi
+          gh release create "$RELEASE_TAG" dist/*.rpm dist/SHA256SUMS dist/BUILD-DEPENDENCIES.txt \
+            --target "$SOURCE_SHA" --title "Projecteur $RELEASE_TAG" \
+            --notes-file release-notes.txt "${flags[@]}"

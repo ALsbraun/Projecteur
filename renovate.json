@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Europe/Berlin",
+  "schedule": ["before 7am on monday"],
+  "enabledManagers": ["github-actions"],
+  "platformAutomerge": false,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "ignoreTests": false,
+  "rebaseWhen": "behind-base-branch",
+  "packageRules": [
+    {
+      "description": "Dependabot owns all uses/action references",
+      "matchManagers": ["github-actions"],
+      "enabled": false
+    },
+    {
+      "description": "Only the tested Fedora 45 build image is updated automatically",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["registry.fedoraproject.org/fedora"],
+      "enabled": true,
+      "allowedVersions": "/^45$/",
+      "pinDigests": true
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["registry.fedoraproject.org/fedora"],
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "automerge": true
+    }
+  ]
+}

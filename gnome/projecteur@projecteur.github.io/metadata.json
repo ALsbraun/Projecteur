@@ -1,0 +1,10 @@
+{
+  "uuid": "projecteur@projecteur.github.io",
+  "name": "Projecteur",
+  "description": "Logitech Spotlight presenter: spotlight, pointer and live magnifier for GNOME Wayland. Requires the Projecteur application.",
+  "gettext-domain": "projecteur",
+  "shell-version": ["51"],
+  "session-modes": ["user"],
+  "version": 2,
+  "url": "https://github.com/ALsbraun/Projecteur"
+}

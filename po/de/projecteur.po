@@ -1,0 +1,462 @@
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Project-Id-Version: Projecteur\n"
+"PO-Revision-Date: 2026-11-19 00:00+0000\n"
+"Last-Translator: Projecteur contributors\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "%1 cannot access %2. Check the installed udev rules and device permissions."
+msgstr "%1 kann nicht auf %2 zugreifen. Prüfe die installierten udev-Regeln und Geräteberechtigungen."
+
+msgid "%1 has %2% battery remaining."
+msgstr "Der Akkustand von %1 beträgt noch %2 %."
+
+msgid "%1 is no longer available."
+msgstr "%1 ist nicht mehr verfügbar."
+
+msgid "%1 is ready."
+msgstr "%1 ist einsatzbereit."
+
+msgid "%1 reported a battery error: %2."
+msgstr "%1 hat einen Akkufehler gemeldet: %2."
+
+#, c-format
+msgid "%d%%"
+msgstr "%d %%"
+
+msgid "About Projecteur"
+msgstr "Über Projecteur"
+
+msgid "Action"
+msgstr "Aktion"
+
+msgid "Add Button Mapping"
+msgstr "Tastenzuordnung hinzufügen"
+
+msgid "Add…"
+msgstr "Hinzufügen …"
+
+msgid "Adjust Volume"
+msgstr "Lautstärke ändern"
+
+msgid "almost full"
+msgstr "fast voll"
+
+msgid "Appearance"
+msgstr "Darstellung"
+
+msgid "Back"
+msgstr "Zurück"
+
+msgid "Back Hold"
+msgstr "Zurück halten"
+
+msgid "Back Hold Move"
+msgstr "Zurück halten und bewegen"
+
+#, c-format
+msgid "Battery %d%%"
+msgstr "Akku %d %%"
+
+msgid "battery error"
+msgstr "Akkufehler"
+
+msgid "Battery Level"
+msgstr "Akkustand"
+
+msgid "Battery level unknown"
+msgstr "Akkustand unbekannt"
+
+msgid "Border Color"
+msgstr "Randfarbe"
+
+msgid "Button mapping is waiting for access to the presenter. Release its buttons and close other apps using it. Access is checked again automatically."
+msgstr "Tastenzuordnungen warten auf den Zugriff auf den Presenter. Lass seine Tasten los und schließe andere Anwendungen, die ihn verwenden. Der Zugriff wird automatisch erneut geprüft."
+
+msgid "Button mapping is waiting for permission to use the virtual input device. Update the Projecteur RPM to apply its device access rules. Access is checked again automatically."
+msgstr "Tastenzuordnungen warten auf die Zugriffsberechtigung für das virtuelle Eingabegerät. Aktualisiere das Projecteur-RPM, um die Zugriffsregeln anzuwenden. Der Zugriff wird automatisch erneut geprüft."
+
+msgid "Button mapping is waiting for the virtual input device. Install the current Projecteur RPM to load the required input driver. Access is checked again automatically."
+msgstr "Tastenzuordnungen warten auf das virtuelle Eingabegerät. Installiere das aktuelle Projecteur-RPM, um den benötigten Eingabetreiber zu laden. Der Zugriff wird automatisch erneut geprüft."
+
+msgid "Button mapping was disabled at startup. Restart Projecteur without --disable-uinput to enable it."
+msgstr "Tastenzuordnungen wurden beim Start deaktiviert. Starte Projecteur ohne --disable-uinput, um sie zu aktivieren."
+
+msgid "Button Mappings"
+msgstr "Tastenzuordnungen"
+
+msgid "Button Sequence Timeout (ms)"
+msgstr "Zeitfenster für Tastenfolgen (ms)"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "charging"
+msgstr "lädt"
+
+msgid "charging error"
+msgstr "Ladefehler"
+
+msgid "charging slowly"
+msgstr "lädt langsam"
+
+msgid "Circle Border"
+msgstr "Kreisrand"
+
+msgid "Circle Size (% of Screen Height)"
+msgstr "Kreisgröße (% der Bildschirmhöhe)"
+
+msgid "Click"
+msgstr "Klick"
+
+msgid "Connect the presenter to use its button mappings."
+msgstr "Verbinde den Presenter, um seine Tastenzuordnungen zu verwenden."
+
+msgid "Connect the presenter via its USB receiver or Bluetooth."
+msgstr "Verbinde den Presenter über USB-Empfänger oder Bluetooth."
+
+msgid "Connected Presenters"
+msgstr "Verbundene Presenter"
+
+msgid "Connection"
+msgstr "Verbindung"
+
+msgid "Could not apply the change."
+msgstr "Änderung konnte nicht übernommen werden."
+
+msgid "Could not complete the action. Restart Projecteur and try again."
+msgstr "Die Aktion konnte nicht ausgeführt werden. Bitte Projecteur erneut starten."
+
+msgid "Could not start Projecteur."
+msgstr "Projecteur konnte nicht gestartet werden."
+
+#, c-format
+msgid "Could not start the service. %s"
+msgstr "Dienst konnte nicht gestartet werden. %s"
+
+msgid "Cycle Presets"
+msgstr "Voreinstellungen wechseln"
+
+msgid "Defaults"
+msgstr "Standardwerte"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "Delete Button Mapping?"
+msgstr "Tastenzuordnung löschen?"
+
+msgid "Delete Preset?"
+msgstr "Voreinstellung löschen?"
+
+msgid "Delete…"
+msgstr "Löschen …"
+
+msgid "Device"
+msgstr "Gerät"
+
+msgid "Device Access"
+msgstr "Gerätezugriff"
+
+msgid "Device Details"
+msgstr "Gerätedetails"
+
+msgid "Device Interfaces"
+msgstr "Geräteschnittstellen"
+
+msgid "Device Path"
+msgstr "Gerätepfad"
+
+msgid "Devices"
+msgstr "Geräte"
+
+msgid "Diffuse"
+msgstr "Diffus"
+
+msgid "Dim All Displays"
+msgstr "Alle Bildschirme abdunkeln"
+
+msgid "Dim the Surroundings"
+msgstr "Umgebung abdunkeln"
+
+msgid "Down"
+msgstr "Abwärts"
+
+msgid "Duration (Seconds)"
+msgstr "Dauer (Sekunden)"
+
+msgid "Edit Button Mapping"
+msgstr "Tastenzuordnung bearbeiten"
+
+msgid "Edit…"
+msgstr "Bearbeiten …"
+
+msgid "Enable Overlay"
+msgstr "Overlay aktivieren"
+
+msgid "Enable the Projecteur extension in GNOME to display the effects."
+msgstr "Aktiviere die Projecteur-Erweiterung in GNOME, um die Effekte anzuzeigen."
+
+msgid "Enable Timer"
+msgstr "Timer aktivieren"
+
+msgid "fully charged"
+msgstr "voll"
+
+msgid "GNOME Extension Disconnected"
+msgstr "GNOME-Erweiterung nicht verbunden"
+
+msgid "Hide the Cursor During the Effect"
+msgstr "Mauszeiger während des Effekts ausblenden"
+
+msgid "Keyboard Shortcut"
+msgstr "Tastenkürzel"
+
+msgid "Load"
+msgstr "Laden"
+
+msgid "Magnification"
+msgstr "Vergrößerung"
+
+msgid "Magnifier"
+msgstr "Lupe"
+
+msgid "Manage Preset"
+msgstr "Voreinstellung verwalten"
+
+msgid "Menu"
+msgstr "Menü"
+
+msgid "Movement Input"
+msgstr "Bewegung als Eingabe"
+
+msgid "New Preset Name"
+msgstr "Name der neuen Voreinstellung"
+
+msgid "Next"
+msgstr "Weiter"
+
+msgid "Next Hold"
+msgstr "Weiter halten"
+
+msgid "Next Hold Move"
+msgstr "Weiter halten und bewegen"
+
+msgid "No Input Selected"
+msgstr "Keine Eingabe ausgewählt"
+
+msgid "No Keyboard Shortcut"
+msgstr "Kein Tastenkürzel"
+
+msgid "No Presenter Connected"
+msgstr "Kein Presenter verbunden"
+
+msgid "No presenter input was recorded."
+msgstr "Keine Presenter-Eingabe aufgenommen."
+
+msgid "Opacity (%)"
+msgstr "Deckkraft (%)"
+
+msgid "Pointer Color"
+msgstr "Pointerfarbe"
+
+msgid "Predefined Shortcut"
+msgstr "Vorgegebenes Tastenkürzel"
+
+msgid "Preferences…"
+msgstr "Einstellungen …"
+
+msgid "Presentation Timer"
+msgstr "Präsentationstimer"
+
+msgid "Presentation timer finished"
+msgstr "Präsentationstimer abgelaufen"
+
+msgid "Presenter access failed"
+msgstr "Zugriff auf Presenter fehlgeschlagen"
+
+msgid "Presenter battery low"
+msgstr "Niedriger Akkustand beim Presenter"
+
+msgid "Presenter battery problem"
+msgstr "Akkuproblem beim Presenter"
+
+msgid "Presenter connected"
+msgstr "Presenter verbunden"
+
+msgid "Presenter disconnected"
+msgstr "Presenter getrennt"
+
+msgid "Presenter Input"
+msgstr "Presenter-Eingabe"
+
+msgid "Presets"
+msgstr "Voreinstellungen"
+
+msgid "Press a presenter button or button sequence"
+msgstr "Presenter-Taste oder Tastenfolge drücken"
+
+msgid "Press the keys, then stop recording"
+msgstr "Tasten drücken, dann Aufnahme beenden"
+
+msgid "Preview"
+msgstr "Vorschau"
+
+msgid "Projecteur Is Running"
+msgstr "Projecteur läuft"
+
+msgid "Ready"
+msgstr "Bereit"
+
+msgid "Record"
+msgstr "Aufnehmen"
+
+msgid "Reset"
+msgstr "Zurücksetzen"
+
+msgid "Reset Overlay Settings"
+msgstr "Overlay-Einstellungen zurücksetzen"
+
+msgid "Reset Overlay Settings?"
+msgstr "Overlay-Einstellungen zurücksetzen?"
+
+msgid "Reset…"
+msgstr "Zurücksetzen …"
+
+msgid "Restart"
+msgstr "Neu starten"
+
+msgid "Retry"
+msgstr "Erneut prüfen"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Saved Preset"
+msgstr "Gespeicherte Voreinstellung"
+
+msgid "Scroll Horizontally"
+msgstr "Horizontal scrollen"
+
+msgid "Scroll Vertically"
+msgstr "Vertikal scrollen"
+
+msgid "Select…"
+msgstr "Auswählen …"
+
+msgid "Send Keyboard Shortcut"
+msgstr "Tastenkürzel auslösen"
+
+msgid "Set to 0% to disable vibration."
+msgstr "Bei 0 % bleibt die Vibration aus."
+
+msgid "Shade Color"
+msgstr "Farbe der Abdunklung"
+
+msgid "Show Border"
+msgstr "Rand anzeigen"
+
+msgid "Show Fading Trail"
+msgstr "Verblassende Spur anzeigen"
+
+msgid "Show Magnifier"
+msgstr "Lupe anzeigen"
+
+msgid "Show Pointer"
+msgstr "Pointer anzeigen"
+
+msgid "Show the effect for ten seconds."
+msgstr "Zeigt den Effekt für zehn Sekunden."
+
+msgid "Size (px)"
+msgstr "Größe (px)"
+
+msgid "Solid"
+msgstr "Einfarbig"
+
+msgid "Start"
+msgstr "Starten"
+
+msgid "Start Presentation Timer"
+msgstr "Präsentationstimer starten"
+
+msgid "Start Preview"
+msgstr "Vorschau starten"
+
+msgid "Start Projecteur"
+msgstr "Projecteur starten"
+
+msgid "Start Service"
+msgstr "Dienst starten"
+
+msgid "Starting Projecteur…"
+msgstr "Projecteur wird gestartet …"
+
+msgid "Stop Preview"
+msgstr "Vorschau beenden"
+
+msgid "Stop Projecteur"
+msgstr "Projecteur Beenden"
+
+msgid "Stop Recording"
+msgstr "Aufnahme beenden"
+
+msgid "Stopping Projecteur…"
+msgstr "Projecteur wird beendet …"
+
+msgid "temperature error"
+msgstr "Temperaturfehler"
+
+msgid "The configured presentation time has elapsed."
+msgstr "Die eingestellte Präsentationszeit ist abgelaufen."
+
+msgid "The input is already mapped or the device was disconnected."
+msgstr "Die Eingabe ist bereits zugeordnet oder das Gerät wurde getrennt."
+
+msgid "The name is already in use or contains a slash."
+msgstr "Der Name ist bereits vergeben oder enthält einen Schrägstrich."
+
+msgid "The overlay is unavailable or in use."
+msgstr "Das Overlay ist nicht verfügbar oder wird gerade verwendet."
+
+msgid "The Projecteur service is disconnected."
+msgstr "Der Projecteur-Dienst ist nicht verbunden."
+
+msgid "The virtual input devices could not be created. Retry device access or check the Projecteur log."
+msgstr "Die virtuellen Eingabegeräte konnten nicht erstellt werden. Prüfe den Gerätezugriff erneut oder sieh im Projecteur-Protokoll nach."
+
+msgid "This restores the default overlay settings."
+msgstr "Die aktuellen Overlay-Werte werden durch die Standardwerte ersetzt."
+
+msgid "Time Is Up"
+msgstr "Zeit abgelaufen"
+
+msgid "Timer Feedback"
+msgstr "Timer-Rückmeldung"
+
+msgid "Timer Running"
+msgstr "Timer läuft"
+
+msgid "Toggle Spotlight"
+msgstr "Spotlight umschalten"
+
+msgid "Unknown"
+msgstr "Unbekannt"
+
+msgid "Up"
+msgstr "Aufwärts"
+
+msgid "Vendor and Product ID"
+msgstr "Hersteller- und Produkt-ID"
+
+msgid "Vibration on Completion (%)"
+msgstr "Vibration bei Ablauf (%)"
+
+msgid "Width (% of Circle Size)"
+msgstr "Breite (% der Kreisgröße)"

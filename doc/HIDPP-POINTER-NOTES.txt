@@ -1,0 +1,140 @@
+Logitech presenter button integration (2026-11-17)
+
+Protocol references
+
+The REPROG_CONTROLS_V4 feature (0x1b04) enumerates supported controls with
+getCount (function 0) and getCidInfo (1). getCidReporting (2) reads the current
+reporting flags; setCidReporting (3) can temporarily divert a control.
+The divertedButtonsEvent (event 0) contains four complete big-endian 16-bit
+control IDs. An all-zero report means that no diverted controls are pressed.
+The raw movement event (1) carries signed big-endian 16-bit X and Y deltas.
+
+Protocol specification, linked by Solaar:
+https://lekensteyn.nl/files/logitech/x1b04_specialkeysmsebuttons.html
+Logitech protocol overview:
+https://github.com/Logitech/cpg-docs/blob/master/hidpp20/README.rst
+Control IDs and capability definitions:
+https://github.com/pwr-Solaar/Solaar/blob/master/lib/logitech_receiver/special_keys.py
+https://github.com/pwr-Solaar/Solaar/blob/master/lib/logitech_receiver/hidpp20.py
+Independent Spotlight 2 hardware observations (not proof for Spotlight 1):
+https://github.com/fmesasc/spotlight2-linux
+
+Implementation
+
+Projecteur only changes the reporting of Cursor_Button_Long_Press (0x00d8)
+and Switch_Highlight (0x00df) after the attached device enumerates those IDs
+with the divertable flag. It reads and saves the prior temporary flags and
+requires a matching getCidReporting readback before accepting their events.
+Only state bits selected by write-valid bits are compared; valid bits need
+not be retained in the returned state. This also verifies a write whose
+acknowledgement timed out before enabling its event handler.
+The SET response payload is not interpreted: captured Spotlight 1 firmware
+returns the correct response header with an entirely zero payload. The request
+dispatcher validates that header; the subsequent GET must return the requested
+CID and reporting state. Explicit HID++ errors remain rejected.
+Raw XY diversion is disabled only for those controls if the device advertises
+that capability, so movement continues through the native input channel.
+Persistent diversion and remapping are not modified by these requests.
+The application's pre-existing general device initialization still performs
+its HID++ configuration reset and configures Next/Back hold gestures.
+
+Temporary pointer flags are restored on normal disconnect/shutdown, including
+when the configuration reply timed out after a write. An unplugged/offline
+device or an abruptly killed application cannot acknowledge restoration;
+temporary diversion is also subject to the device's HID++ reset policy.
+
+After the first real pointer press report, press/release is authoritative:
+holding without motion remains visible, release immediately hides the effect,
+and trailing motion does not reactivate it. State is tracked per connection.
+Disconnect/power-off clears hold state. Firmware that does not enumerate or
+confirm pointer controls retains the existing 600 ms motion timeout fallback.
+Confirmed Switch_Highlight presses request the application's mode cycle.
+Direct Bluetooth accepts either the command device index or Logitech's 0xff
+direct-device address for button notifications on that device's own hidraw
+connection. USB receiver slots remain strictly separated. The public Logitech
+HID++ 1.0 specification defines 0xff for receiver/corded/Bluetooth devices:
+https://lekensteyn.nl/files/logitech/logitech_hidpp10_specification_for_Unifying_Receivers.pdf
+Solaar's direct-device setup and listener use 0xff too:
+https://github.com/pwr-Solaar/Solaar/blob/master/lib/logitech_receiver/device.py
+https://github.com/pwr-Solaar/Solaar/blob/master/lib/solaar/listener.py
+
+The shared virtual mouse/keyboard track successfully injected pressed keys.
+Disconnect/error/power-off releases them so a lost physical key-up cannot leave
+the desktop scrolling or repeatedly changing slides. With multiple presenters,
+disconnecting one also releases any keys held by the others as a fail-safe;
+those buttons must be released and pressed again. Ordinary mouse/keyboard
+devices unrelated to Projecteur are unaffected.
+
+Missing uinput access is retried without reinitializing the presenter. Existing
+input mappers acquire virtual devices once permissions are available. Event
+device grabs wait for released buttons; key state is checked before and after
+grabbing, and queued native events are discarded to avoid replaying clicks.
+The input mapping UI explains missing permissions or unavailable grabs and
+offers a retry; automatic retries continue while access is unavailable.
+
+Validation
+
+tests/device-input-test.cc exercises mixed mouse/keyboard reports, scan-code
+prefixes, media keys, pseudo-key filtering, pointer speeds, signed HID++ motion,
+all four control slots and truncated reports. It also drives the same pointer
+state evaluator used by Spotlight through hold-without-motion, release,
+multiple presenters, disconnect and power-off. Additional checks cover current
+reporting-state bytes without write-valid bits and direct Bluetooth addresses
+without accepting another USB receiver slot.
+tests/input-mapper-recovery-test.cc uses the production InputMapper with a fake
+kernel output endpoint. It verifies delayed availability, exactly-once native
+key forwarding, preservation of configured mappings, and clearing stale input
+sequences when virtual endpoints change without disrupting unchanged retries.
+tests/hidpp-pointer-control-test.cc drives the production HID++ initialization
+and notification parser over a local packet socket. It covers empty SET
+acknowledgements, lost acknowledgements with successful state readback, explicit
+SET errors, mismatched readback CIDs, disabled state, duplicate press reports,
+and exactly one mode-cycle signal per accepted press/release.
+
+Read-only host diagnosis on 2026-11-17 reached the original Spotlight over
+Bluetooth (046d:b503). getFeature(1b04) returned feature index 7, version 3;
+getCount returned 7 controls: 0050, 00d8, 00df, 00d9, 00da, 00db, 00dc.
+The relevant controls were confirmed as follows (capability flags are combined
+from the low flags byte and additional flags byte):
+
+  CID   Task   Capabilities  getCidReporting state
+  00d8  00b7   0134          01
+  00df  00be   0034          01
+
+These queries confirmed both controls exist and are currently diverted. The
+read-only diagnosis sent no SET or RESET requests. An initial bounded passive
+capture produced no matching reports before user interaction was confirmed;
+that capture established neither success nor failure.
+
+A subsequent user-triggered capture under installed version 1.0.1 confirmed
+00df press/release and 00d8 hold/release at device index ff, feature index 7,
+event 0, software ID 0. Switch Highlight worked with native pointer movement
+(d8 state 01); raw XY diversion is not required for its firmware event.
+The installed application's ordinary initialization, observed with HID++ debug
+logging, then showed both SET acknowledgements with all-zero payloads:
+
+  d8 write: 11 01 07 37 00 d8 23 ... -> 11 01 07 37 00 00 00 ...
+  df write: 11 01 07 37 00 df 03 ... -> 11 01 07 37 00 00 00 ...
+
+Version 1.0.1 incorrectly required an echoed CID before reading back state, so
+it left its local pointer-control allowlist empty despite successful device
+configuration. Removing that check and retaining strict GET validation fixes
+the evidenced initialization failure. Final installed-RPM interaction remains
+a separate hardware acceptance step.
+
+The host's /dev/uinput was root-owned mode 0600, without the active user's ACL
+or uaccess tag despite installed rules. The application log confirmed failed
+uinput opens. This explains the disabled input mapping UI; package-triggered
+rule application and runtime permission recovery address it.
+
+Hardware acceptance still required, separately for receiver and Bluetooth:
+1. Hold pointer still for at least five seconds; effect must remain visible.
+2. Release pointer; effect must disappear promptly without flicker.
+3. Single-click a link; verify exactly one mouse click reaches the application.
+4. Double-click pointer; verify mode cycle, then hold to display the new mode.
+5. Press Next/Back once; verify exactly one slide change.
+6. Map both long presses and movement gestures; test volume and scrolling.
+7. Switch off/unplug while holding; no overlay or button may remain stuck.
+8. Reconnect/wake; all actions must work again without restarting Projecteur.
+9. Test HID++ initialization logs for enabled control 00d8 and, if supported,
+   00df. A fallback is functional but does not establish Windows equivalence.
